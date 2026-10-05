@@ -49,7 +49,7 @@ func NewEnvironment() (*Environment, error) {
 			AudioBackend:      "Automatic",
 			WindowsPluginsDir: filepath.Join(jdawDir, "plugins", "Windows"),
 			Theme:             "Dark",
-			FontFamily:        "Roboto",
+			FontFamily:        "CozetteVector",
 		},
 	}
 
