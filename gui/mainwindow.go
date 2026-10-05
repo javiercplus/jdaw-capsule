@@ -12,6 +12,7 @@ func NewMainWindow(app *qt.QApplication) *qt.QMainWindow {
 	window.SetWindowTitle("JDAW Capsule")
 	window.SetWindowFlags(qt.FramelessWindowHint)
 	window.SetMinimumSize2(860, 560)
+	ApplyAppIcon(window)
 
 	env.Config.Theme = ThemeByName(env.Config.Theme).Name
 	BindThemeTarget(app, window)
@@ -116,15 +117,19 @@ func NewMainWindow(app *qt.QApplication) *qt.QMainWindow {
 
 	tabStart := CreateTabStart(env, statusBar)
 	tabSettings := CreateTabSettings(env, statusBar, window)
+	tabVsts := CreateTabVsts(env, statusBar)
 	tabInstallWine := CreateTabInstall(env, statusBar)
 	tabInstallReaper := CreateTabInstallReaper(env, statusBar)
 	tabInstallYabridge := CreateTabInstallYabridge(env, statusBar)
+	tabAbout := CreateTabAbout(nil, statusBar)
 	// Add tabs
 	tabWidget.InsertTab(0, tabStart, "Start")
 	tabWidget.InsertTab(1, tabSettings, "Settings")
-	tabWidget.InsertTab(2, tabInstallWine, "Install Wine")
-	tabWidget.InsertTab(3, tabInstallReaper, "Install REAPER")
-	tabWidget.InsertTab(4, tabInstallYabridge, "Install yabridge")
+	tabWidget.InsertTab(2, tabVsts, "Windows VSTs")
+	tabWidget.InsertTab(3, tabInstallWine, "Install Wine")
+	tabWidget.InsertTab(4, tabInstallReaper, "Install REAPER")
+	tabWidget.InsertTab(5, tabInstallYabridge, "Install yabridge")
+	tabWidget.InsertTab(6, tabAbout, "About")
 	layout.AddWidget(tabWidget.QWidget)
 	window.Resize(960, 640)
 	return window

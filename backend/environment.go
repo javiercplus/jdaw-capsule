@@ -4,10 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
+	"strings"
+	"time"
 
 	"jdaw-capsule/asset"
 )
@@ -64,6 +68,7 @@ func (e *Environment) LoadConfig() {
 	if err == nil {
 		json.Unmarshal(data, &e.Config)
 	}
+	os.MkdirAll(e.Config.WindowsPluginsDir, 0755)
 }
 
 func (e *Environment) SaveConfig() error {
@@ -73,6 +78,98 @@ func (e *Environment) SaveConfig() error {
 		return err
 	}
 	return os.WriteFile(e.ConfigPath, data, 0644)
+}
+
+// Plugin is a Windows plugin discovered under the bridged plugins directory.
+type Plugin struct {
+	Name     string
+	Format   string
+	Path     string
+	Size     int64
+	Modified time.Time
+}
+
+// pluginFormats maps every Windows plugin extension yabridge can bridge to the
+// label shown in the UI.
+var pluginFormats = map[string]string{
+	".vst":  "VST2",
+	".vst3": "VST3",
+	".clap": "CLAP",
+	".dll":  "DLL",
+}
+
+// ScanPlugins walks the configured plugins directory and returns every plugin
+// found there, sorted by format and then by name.
+func (e *Environment) ScanPlugins() ([]Plugin, error) {
+	root := e.Config.WindowsPluginsDir
+	if root == "" {
+		return nil, fmt.Errorf("no plugins directory configured")
+	}
+	if _, err := os.Stat(root); err != nil {
+		return nil, fmt.Errorf("cannot read %s: %w", root, err)
+	}
+
+	var plugins []Plugin
+	seen := make(map[string]bool)
+	err := filepath.WalkDir(root, func(path string, entry fs.DirEntry, err error) error {
+		if err != nil || entry.IsDir() {
+			// Unreadable entries are skipped so one bad folder cannot hide the rest.
+			return nil
+		}
+		format, ok := pluginFormats[strings.ToLower(filepath.Ext(path))]
+		if !ok {
+			return nil
+		}
+		name := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
+		key := format + "\x00" + strings.ToLower(name)
+		if seen[key] {
+			// A VST3 bundle and the binary inside it share a name, keep the first.
+			return nil
+		}
+		info, err := entry.Info()
+		if err != nil {
+			return nil
+		}
+		seen[key] = true
+		plugins = append(plugins, Plugin{
+			Name:     name,
+			Format:   format,
+			Path:     path,
+			Size:     info.Size(),
+			Modified: info.ModTime(),
+		})
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	sort.Slice(plugins, func(i, j int) bool {
+		if ri, rj := formatRank(plugins[i].Format), formatRank(plugins[j].Format); ri != rj {
+			return ri < rj
+		}
+		return strings.ToLower(plugins[i].Name) < strings.ToLower(plugins[j].Name)
+	})
+	return plugins, nil
+}
+
+// formatOrder groups the list by format the way a plugin user expects to read
+// it: the VST standards first, then CLAP, then loose DLLs.
+var formatOrder = map[string]int{"VST2": 0, "VST3": 1, "CLAP": 2, "DLL": 3}
+
+func formatRank(format string) int {
+	if rank, ok := formatOrder[format]; ok {
+		return rank
+	}
+	return len(formatOrder)
+}
+
+// OpenInFileManager opens a file or directory with the desktop default handler.
+func OpenInFileManager(path string) error {
+	if _, err := os.Stat(path); err != nil {
+		return err
+	}
+	return exec.Command("xdg-open", path).Start()
 }
 
 func (e *Environment) SetupYabridge() error {

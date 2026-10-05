@@ -1,2 +1,23 @@
 # jdaw-capsule
-Portatil Environment Manager for MUSIC PRODUCTION ON LINUX
+
+Portable environment manager for Linux music production. Sets up a local Wine prefix, helps install REAPER and yabridge, and manages Windows VST plugins for use with Linux DAWs.
+
+Built with Go + miqt (Qt) and embeds its icon and font.
+
+## Usage
+
+```bash
+make build
+./jdaw-capsule-gui
+```
+
+## Requirements
+
+- Go 1.27+
+- Qt 6 (miqt dependencies)
+- Wine (for Windows VSTs/yabridge)
+- `xdg-open` (to open directories from the UI)
+
+## License
+
+BSD-3-CLAUSE

@@ -15,6 +15,11 @@ func CreateTabStart(env *backend.Environment, statusBar *qt.QStatusBar) *qt.QWid
 	layout.SetSpacing(8)
 
 	// --- Title section ---
+	logoLabel := qt.NewQLabel(widget)
+	logoLabel.SetObjectName("AppLogo")
+	logoLabel.SetAlignment(qt.AlignCenter)
+	logoLabel.SetPixmap(AppLogoPixmap(logoLabel.QWidget, AppLogoSize))
+
 	titleLabel := qt.NewQLabel(widget)
 	titleLabel.SetText("JDAW Capsule")
 	titleLabel.SetAlignment(qt.AlignCenter)
@@ -30,6 +35,7 @@ func CreateTabStart(env *backend.Environment, statusBar *qt.QStatusBar) *qt.QWid
 	subtitleFont.SetPointSize(11)
 	subtitleLabel.SetFont(subtitleFont)
 
+	layout.AddWidget(logoLabel.QWidget)
 	layout.AddWidget(titleLabel.QWidget)
 	layout.AddWidget(subtitleLabel.QWidget)
 

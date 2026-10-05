@@ -292,6 +292,30 @@ const styleSheetTemplate = `
 		border: 1px solid {{Border}};
 		border-radius: 0px;
 	}
+	QListWidget {
+		background-color: {{Surface}};
+		border: 1px solid {{Border}};
+		padding: 4px;
+		color: {{Text}};
+		outline: none;
+	}
+	QListWidget::item {
+		padding: 4px 6px;
+	}
+	QListWidget::item:selected {
+		background-color: {{Hover}};
+		color: {{Text}};
+	}
+	QListWidget::item:hover {
+		background-color: {{Hover}};
+	}
+	QLabel#VstDetail {
+		background-color: {{Surface}};
+		border: 1px solid {{Border}};
+		padding: 8px 10px;
+		color: {{Dim}};
+		font-size: 11px;
+	}
 	QProgressBar {
 		border: 1px solid {{Border}};
 		background: {{Surface}};
