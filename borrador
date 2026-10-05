@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# Obtenemos el directorio donde está el script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Agregamos al PATH las carpetas locales de Wine y REAPER
+export PATH="$SCRIPT_DIR/wine-7.22-staging-amd64/bin:$SCRIPT_DIR/REAPER:$PATH"
+export WINEPREFIX="$SCRIPT_DIR/data"
+
+# Creamos o actualizamos el enlace simbólico de yabridge en ~/.local/share
+SRC="$SCRIPT_DIR/yabridge"
+LINK="$HOME/.local/share/yabridge"
+
+if [ ! -L "$LINK" ] || [ "$(readlink "$LINK")" != "$SRC" ]; then
+    echo "Creando/actualizando enlace simbólico de yabridge..."
+    mkdir -p "$HOME/.local/share"
+    ln -sfn "$SRC" "$LINK"
+fi
+
+# Agregamos la ruta dinámica de los plugins a yabridge
+WINDOWS_PLUGINS_DIR="$SCRIPT_DIR/plugins/Windows"
+echo "Agregando ruta de plugins de Windows: $WINDOWS_PLUGINS_DIR"
+"$LINK/yabridgectl" add "$WINDOWS_PLUGINS_DIR"
+
+# Sincronizamos plugins con yabridge
+echo "Sincronizando plugins VST..."
+"$LINK/yabridgectl" sync --prune
+
+# Detectamos si pw-jack está disponible
+USE_PW_JACK=false
+if command -v pw-jack &> /dev/null; then
+    USE_PW_JACK=true
+    echo "PipeWire JACK detectado, mejorando rendimiento de audio..."
+fi
+
+# Preparamos el comando base para REAPER
+REAPER_CMD="reaper"
+
+# Iniciamos REAPER según el entorno gráfico
+echo "Abriendo REAPER..."
+if [ "$XDG_SESSION_TYPE" = "wayland" ]; then
+    # Wayland: forzamos XWayland para REAPER
+    echo "Entorno Wayland detectado, usando XWayland..."
+    export DISPLAY=:0
+    export GDK_BACKEND=x11
+    export QT_QPA_PLATFORM=xcb
+
+    if $USE_PW_JACK; then
+        env -u WAYLAND_DISPLAY pw-jack reaper
+    else
+        env -u WAYLAND_DISPLAY reaper
+    fi
+else
+    # X11: ejecución normal o con pw-jack
+    echo "Entorno X11 detectado, ejecutando normalmente..."
+
+    if $USE_PW_JACK; then
+        pw-jack reaper
+    else
+        reaper
+    fi
+fi
