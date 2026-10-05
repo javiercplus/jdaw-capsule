@@ -56,7 +56,7 @@ func NewMainWindow(app *qt.QApplication) *qt.QMainWindow {
 			btnMax.SetText("⬜")
 		} else {
 			window.ShowMaximized()
-			btnMax.SetText("❐")
+			btnMax.SetText("⬜")
 		}
 	})
 

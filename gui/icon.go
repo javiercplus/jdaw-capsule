@@ -13,7 +13,7 @@ import (
 const DesktopFileName = "jdaw-capsule"
 
 // AppLogoSize is the logical edge, in pixels, of the logo shown above the title.
-const AppLogoSize = 72
+const AppLogoSize = 196
 
 var (
 	appIconOnce sync.Once
