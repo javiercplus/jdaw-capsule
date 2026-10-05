@@ -92,14 +92,12 @@ func CreateTabSettings(env *backend.Environment, statusBar *qt.QStatusBar, windo
 	fontLabel.SetText("Font Family")
 
 	fontCombo := qt.NewQFontComboBox(fontWidget)
-	if env.Config.FontFamily != "" {
-		fontCombo.SetCurrentFont(qt.NewQFont6(env.Config.FontFamily, 12))
-	}
+	fontCombo.SetCurrentFont(qt.NewQFont6(ResolveFontFamily(env.Config.FontFamily), 12))
 
 	fontCombo.OnCurrentFontChanged(func(f *qt.QFont) {
 		env.Config.FontFamily = f.Family()
 		env.SaveConfig()
-		ApplyTheme(ThemeByName(env.Config.Theme), env.Config.FontFamily)
+		ApplyTheme(ThemeByName(env.Config.Theme), ResolveFontFamily(env.Config.FontFamily))
 		statusBar.ShowMessage2("Font: "+env.Config.FontFamily, 2000)
 	})
 

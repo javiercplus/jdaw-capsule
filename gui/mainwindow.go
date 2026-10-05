@@ -15,7 +15,7 @@ func NewMainWindow(app *qt.QApplication) *qt.QMainWindow {
 
 	env.Config.Theme = ThemeByName(env.Config.Theme).Name
 	BindThemeTarget(app, window)
-	ApplyTheme(ThemeByName(env.Config.Theme), env.Config.FontFamily)
+	ApplyTheme(ThemeByName(env.Config.Theme), ResolveFontFamily(env.Config.FontFamily))
 
 	centralWidget := qt.NewQWidget(window.QWidget)
 	window.SetCentralWidget(centralWidget)

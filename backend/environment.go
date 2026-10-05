@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"jdaw-capsule/asset"
 )
 
 type Config struct {
@@ -49,7 +51,7 @@ func NewEnvironment() (*Environment, error) {
 			AudioBackend:      "Automatic",
 			WindowsPluginsDir: filepath.Join(jdawDir, "plugins", "Windows"),
 			Theme:             "Dark",
-			FontFamily:        "CozetteVector",
+			FontFamily:        asset.DefaultFontFamily,
 		},
 	}
 

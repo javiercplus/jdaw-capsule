@@ -1,7 +1,7 @@
 BIN      := jdaw-capsule-gui
 PREFIX   ?= $(HOME)/.local
 GO       ?= go
-SOURCES  := main.go $(wildcard gui/*.go backend/*.go)
+SOURCES  := main.go $(wildcard gui/*.go backend/*.go asset/*.go) $(wildcard asset/*.ttf)
 
 .PHONY: all build run fmt vet tidy clean install help
 
