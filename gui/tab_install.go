@@ -42,7 +42,7 @@ func CreateTabInstall(env *backend.Environment, statusBar *qt.QStatusBar) *qt.QW
 
 	// Pre-detect installation
 	if _, err := os.Stat(filepath.Join(env.WineBin, "wine")); err == nil {
-		statusLabel.SetText("✅ Wine is already installed in this environment.")
+		statusLabel.SetText("Wine is already installed in this environment.")
 	}
 
 	btnInstall := qt.NewQPushButton(widget)
