@@ -44,7 +44,7 @@ func CreateTabInstallYabridge(env *backend.Environment, statusBar *qt.QStatusBar
 
 	// Pre-detect installation
 	if _, err := os.Stat(filepath.Join(env.YabridgeDir, "yabridgectl")); err == nil {
-		statusLabel.SetText("✅ yabridge is already installed in this environment.")
+		statusLabel.SetText("yabridge is already installed in this environment.")
 	}
 	btnInstall := qt.NewQPushButton(widget)
 	btnInstall.SetText("Install yabridge")
