@@ -44,7 +44,7 @@ func CreateTabInstallReaper(env *backend.Environment, statusBar *qt.QStatusBar) 
 
 	// Pre-detect installation
 	if _, err := os.Stat(filepath.Join(env.ReaperDir, "reaper")); err == nil {
-		statusLabel.SetText("✅ REAPER is already installed in this environment.")
+		statusLabel.SetText("REAPER is already installed in this environment.")
 	}
 	btnInstall := qt.NewQPushButton(widget)
 	btnInstall.SetText("Install REAPER")
