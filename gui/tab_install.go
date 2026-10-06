@@ -1,6 +1,8 @@
 package gui
 
 import (
+	"os"
+	"path/filepath"
 	"jdaw-capsule/backend"
 
 	"github.com/mappu/miqt/qt"
@@ -12,7 +14,6 @@ func CreateTabInstall(env *backend.Environment, statusBar *qt.QStatusBar) *qt.QW
 	layout.SetContentsMargins(24, 24, 24, 24)
 	layout.SetSpacing(12)
 
-	// --- Info group ---
 	infoGroup := qt.NewQGroupBox(widget)
 	infoGroup.SetTitle("Wine Installation")
 	infoLayout := qt.NewQVBoxLayout(infoGroup.QWidget)
@@ -24,7 +25,6 @@ func CreateTabInstall(env *backend.Environment, statusBar *qt.QStatusBar) *qt.QW
 	descLabel.SetWordWrap(true)
 	infoLayout.AddWidget(descLabel.QWidget)
 
-	// Target path info
 	pathLabel := qt.NewQLabel(infoGroup.QWidget)
 	pathLabel.SetText("Install to: " + env.JDAWDir)
 	pathLabel.SetWordWrap(true)
@@ -35,23 +35,16 @@ func CreateTabInstall(env *backend.Environment, statusBar *qt.QStatusBar) *qt.QW
 
 	layout.AddWidget(infoGroup.QWidget)
 
-	// --- Progress section ---
-	progressBar := qt.NewQProgressBar(widget)
-	progressBar.SetMinimum(0)
-	progressBar.SetMaximum(0) // Indeterminate mode
-	progressBar.SetTextVisible(true)
-	progressBar.SetFormat("Waiting...")
-	progressBar.SetVisible(false) // Hidden until install starts
-
-	layout.AddWidget(progressBar.QWidget)
-
-	// --- Status label ---
 	statusLabel := qt.NewQLabel(widget)
 	statusLabel.SetAlignment(qt.AlignCenter)
 	statusLabel.SetWordWrap(true)
 	layout.AddWidget(statusLabel.QWidget)
 
-	// --- Install button ---
+	// Pre-detect installation
+	if _, err := os.Stat(filepath.Join(env.WineBin, "wine")); err == nil {
+		statusLabel.SetText("✅ Wine is already installed in this environment.")
+	}
+
 	btnInstall := qt.NewQPushButton(widget)
 	btnInstall.SetText("Install Wine")
 	btnInstall.SetMinimumHeight(40)
@@ -61,28 +54,13 @@ func CreateTabInstall(env *backend.Environment, statusBar *qt.QStatusBar) *qt.QW
 	btnInstall.SetFont(installFont)
 
 	btnInstall.OnClicked(func() {
-		statusLabel.SetText("Downloading and extracting Wine...\nThe UI may be unresponsive during this process.")
-		btnInstall.SetEnabled(false)
-		progressBar.SetVisible(true)
-		progressBar.SetFormat("Downloading & Extracting...")
-		statusBar.ShowMessage("Installing Wine...")
-
-		err := env.DownloadWine(nil)
-		progressBar.SetVisible(false)
-
-		if err != nil {
-			statusLabel.SetText("❌ Error: " + err.Error())
-			statusBar.ShowMessage("Wine installation failed")
-		} else {
-			statusLabel.SetText("✅ Wine installed successfully!")
-			statusBar.ShowMessage2("Wine installed successfully", 5000)
-		}
-		btnInstall.SetEnabled(true)
+		runAsyncInstall(widget, "Wine", statusLabel, statusBar, btnInstall, func() error {
+			return env.DownloadWine(nil)
+		}, "Wine installed successfully!")
 	})
 
 	layout.AddWidget3(btnInstall.QWidget, 0, qt.AlignCenter)
 
-	// --- Stretch ---
 	layout.AddStretch()
 
 	return widget

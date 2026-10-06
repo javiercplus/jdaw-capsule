@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"jdaw-capsule/backend"
 	"os"
+	"path/filepath"
 
 	"github.com/mappu/miqt/qt"
 )
@@ -14,7 +15,6 @@ func CreateTabStart(env *backend.Environment, statusBar *qt.QStatusBar) *qt.QWid
 	layout.SetContentsMargins(24, 24, 24, 24)
 	layout.SetSpacing(8)
 
-	// --- Title section ---
 	logoLabel := qt.NewQLabel(widget)
 	logoLabel.SetObjectName("AppLogo")
 	logoLabel.SetAlignment(qt.AlignCenter)
@@ -39,7 +39,6 @@ func CreateTabStart(env *backend.Environment, statusBar *qt.QStatusBar) *qt.QWid
 	layout.AddWidget(titleLabel.QWidget)
 	layout.AddWidget(subtitleLabel.QWidget)
 
-	// --- Separator ---
 	layout.AddSpacing(8)
 	separator := qt.NewQFrame(widget)
 	separator.SetObjectName("separator")
@@ -48,7 +47,6 @@ func CreateTabStart(env *backend.Environment, statusBar *qt.QStatusBar) *qt.QWid
 	layout.AddWidget(separator.QWidget)
 	layout.AddSpacing(8)
 
-	// --- Environment info section ---
 	infoGroup := qt.NewQGroupBox(widget)
 	infoGroup.SetTitle("Environment")
 	infoLayout := qt.NewQFormLayout(infoGroup.QWidget)
@@ -69,10 +67,8 @@ func CreateTabStart(env *backend.Environment, statusBar *qt.QStatusBar) *qt.QWid
 
 	layout.AddWidget(infoGroup.QWidget)
 
-	// --- Stretch before button ---
 	layout.AddStretch()
 
-	// --- Start DAW button ---
 	btnStart := qt.NewQPushButton(widget)
 	btnStart.SetText("Start DAW")
 	btnStart.SetMinimumHeight(48)
@@ -83,18 +79,42 @@ func CreateTabStart(env *backend.Environment, statusBar *qt.QStatusBar) *qt.QWid
 	btnStart.SetFont(startBtnFont)
 
 	btnStart.OnClicked(func() {
-		statusBar.ShowMessage2("Launching REAPER...", 5000)
-		err := env.LaunchReaper()
-		if err != nil {
-			statusBar.ShowMessage(fmt.Sprintf("Error: %v", err))
-		} else {
-			statusBar.ShowMessage2("REAPER launched successfully", 3000)
+		reaperExec := filepath.Join(env.ReaperDir, "reaper")
+		if _, err := os.Stat(reaperExec); os.IsNotExist(err) {
+			qt.QMessageBox_Warning(widget, "REAPER Not Installed", "REAPER is not installed.\nPlease navigate to the Install tabs and install Wine, REAPER, and Yabridge one by one.")
+			return
 		}
+
+		statusBar.ShowMessage("Launching REAPER...")
+		btnStart.SetEnabled(false)
+
+		doneCh := make(chan error, 1)
+		go func() {
+			err := env.LaunchReaper()
+			doneCh <- err
+		}()
+
+		var checkTimer *qt.QTimer
+		checkTimer = qt.NewQTimer()
+		checkTimer.OnTimeout(func() {
+			select {
+			case err := <-doneCh:
+				checkTimer.Stop()
+				btnStart.SetEnabled(true)
+				if err != nil {
+					statusBar.ShowMessage(fmt.Sprintf("Error launching REAPER: %v", err))
+				} else {
+					statusBar.ShowMessage2("REAPER launched successfully", 5000)
+				}
+			default:
+				// Still launching
+			}
+		})
+		checkTimer.Start(100)
 	})
 
 	layout.AddWidget3(btnStart.QWidget, 0, qt.AlignCenter)
 
-	// --- Version info ---
 	layout.AddSpacing(8)
 	versionLabel := qt.NewQLabel(widget)
 	hostname, _ := os.Hostname()

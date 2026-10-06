@@ -1,6 +1,8 @@
 package gui
 
 import (
+	"os"
+	"path/filepath"
 	"jdaw-capsule/backend"
 
 	"github.com/mappu/miqt/qt"
@@ -11,7 +13,6 @@ func CreateTabInstallReaper(env *backend.Environment, statusBar *qt.QStatusBar) 
 	layout := qt.NewQVBoxLayout(widget)
 	layout.SetContentsMargins(24, 24, 24, 24)
 	layout.SetSpacing(12)
-	// --- Info group ---
 	infoGroup := qt.NewQGroupBox(widget)
 	infoGroup.SetTitle("REAPER Installation")
 	infoLayout := qt.NewQVBoxLayout(infoGroup.QWidget)
@@ -28,7 +29,6 @@ func CreateTabInstallReaper(env *backend.Environment, statusBar *qt.QStatusBar) 
 	urlFont.SetPointSize(9)
 	urlLabel.SetFont(urlFont)
 	infoLayout.AddWidget(urlLabel.QWidget)
-	// Target path info
 	pathLabel := qt.NewQLabel(infoGroup.QWidget)
 	pathLabel.SetText("Install to: " + env.ReaperDir)
 	pathLabel.SetWordWrap(true)
@@ -37,20 +37,15 @@ func CreateTabInstallReaper(env *backend.Environment, statusBar *qt.QStatusBar) 
 	pathLabel.SetFont(pathFont)
 	infoLayout.AddWidget(pathLabel.QWidget)
 	layout.AddWidget(infoGroup.QWidget)
-	// --- Progress section ---
-	progressBar := qt.NewQProgressBar(widget)
-	progressBar.SetMinimum(0)
-	progressBar.SetMaximum(0)
-	progressBar.SetTextVisible(true)
-	progressBar.SetFormat("Waiting...")
-	progressBar.SetVisible(false)
-	layout.AddWidget(progressBar.QWidget)
-	// --- Status label ---
 	statusLabel := qt.NewQLabel(widget)
 	statusLabel.SetAlignment(qt.AlignCenter)
 	statusLabel.SetWordWrap(true)
 	layout.AddWidget(statusLabel.QWidget)
-	// --- Install button ---
+
+	// Pre-detect installation
+	if _, err := os.Stat(filepath.Join(env.ReaperDir, "reaper")); err == nil {
+		statusLabel.SetText("✅ REAPER is already installed in this environment.")
+	}
 	btnInstall := qt.NewQPushButton(widget)
 	btnInstall.SetText("Install REAPER")
 	btnInstall.SetMinimumHeight(40)
@@ -58,24 +53,11 @@ func CreateTabInstallReaper(env *backend.Environment, statusBar *qt.QStatusBar) 
 	installFont.SetPointSize(11)
 	btnInstall.SetFont(installFont)
 	btnInstall.OnClicked(func() {
-		statusLabel.SetText("Downloading and extracting REAPER...\nThe UI may be unresponsive during this process.")
-		btnInstall.SetEnabled(false)
-		progressBar.SetVisible(true)
-		progressBar.SetFormat("Downloading & Extracting...")
-		statusBar.ShowMessage("Installing REAPER...")
-		err := env.DownloadReaper(nil)
-		progressBar.SetVisible(false)
-		if err != nil {
-			statusLabel.SetText("❌ Error: " + err.Error())
-			statusBar.ShowMessage("REAPER installation failed")
-		} else {
-			statusLabel.SetText("✅ REAPER installed successfully!")
-			statusBar.ShowMessage2("REAPER installed successfully", 5000)
-		}
-		btnInstall.SetEnabled(true)
+		runAsyncInstall(widget, "REAPER", statusLabel, statusBar, btnInstall, func() error {
+			return env.DownloadReaper(nil)
+		}, "REAPER installed successfully!")
 	})
 	layout.AddWidget3(btnInstall.QWidget, 0, qt.AlignCenter)
-	// --- Stretch ---
 	layout.AddStretch()
 	return widget
 }

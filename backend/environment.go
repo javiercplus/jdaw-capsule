@@ -49,7 +49,7 @@ func NewEnvironment() (*Environment, error) {
 		WineBin:      filepath.Join(jdawDir, "wine-7.22-staging-amd64", "bin"),
 		YabridgeDir:  filepath.Join(jdawDir, "yabridge"),
 		YabridgeLink: filepath.Join(homeDir, ".local", "share", "yabridge"),
-		ReaperDir:    filepath.Join(jdawDir, "REAPER"),
+		ReaperDir:    filepath.Join(jdawDir, "reaper_linux_x86_64", "REAPER"),
 		ConfigPath:   configPath,
 		Config: Config{
 			AudioBackend:      "Automatic",
@@ -60,6 +60,7 @@ func NewEnvironment() (*Environment, error) {
 	}
 
 	env.LoadConfig()
+	os.MkdirAll(env.WinePrefix, 0755)
 	return env, nil
 }
 
@@ -186,11 +187,16 @@ func (e *Environment) SetupYabridge() error {
 	// Add dynamic path
 	yabridgectl := filepath.Join(e.YabridgeLink, "yabridgectl")
 	if _, err := os.Stat(yabridgectl); err == nil {
+		path := fmt.Sprintf("%s:%s", e.WineBin, os.Getenv("PATH"))
+		env := append(os.Environ(), "WINEPREFIX="+e.WinePrefix, "PATH="+path)
+
 		cmd := exec.Command(yabridgectl, "add", e.Config.WindowsPluginsDir)
+		cmd.Env = env
 		cmd.Run()
 
 		// Sync
 		cmdSync := exec.Command(yabridgectl, "sync", "--prune")
+		cmdSync.Env = env
 		cmdSync.Run()
 	}
 
