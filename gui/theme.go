@@ -158,9 +158,6 @@ func BindThemeTarget(app *qt.QApplication, window *qt.QMainWindow) {
 // ApplyTheme installs the theme stylesheet application-wide and repolishes the window.
 func ApplyTheme(theme Theme, fontFamily string) {
 	sheet := theme.StyleSheet(fontFamily)
-	if themeTarget.app != nil {
-		themeTarget.app.SetStyleSheet(sheet)
-	}
 	if themeTarget.window != nil {
 		themeTarget.window.SetStyleSheet(sheet)
 	}

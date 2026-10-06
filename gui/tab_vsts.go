@@ -33,7 +33,7 @@ func CreateTabVsts(env *backend.Environment, statusBar *qt.QStatusBar) *qt.QWidg
 	list := qt.NewQListWidget(group.QWidget)
 	list.SetSelectionMode(qt.QAbstractItemView__SingleSelection)
 	list.SetUniformItemSizes(true)
-	list.SetAlternatingRowColors(true)
+	list.SetAlternatingRowColors(false)
 	list.SetMinimumHeight(240)
 	groupLayout.AddWidget(list.QWidget)
 

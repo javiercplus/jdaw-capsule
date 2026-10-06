@@ -193,7 +193,7 @@ func CreateTabSettings(env *backend.Environment, statusBar *qt.QStatusBar, windo
 	btnBrowse.SetText("Browse...")
 
 	btnBrowse.OnClicked(func() {
-		dir := qt.QFileDialog_GetExistingDirectory3(widget, "Select Windows Plugins Directory", env.Config.WindowsPluginsDir)
+		dir := ShowFolderPicker(widget, "Select Windows Plugins Directory", env.Config.WindowsPluginsDir)
 		if dir != "" {
 			inputPath.SetText(dir)
 			env.Config.WindowsPluginsDir = dir
